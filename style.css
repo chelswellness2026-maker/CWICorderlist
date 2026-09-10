@@ -1131,7 +1131,7 @@ input[readonly] {
     letter-spacing: 0.4px;
 }
 
-#productRows {
+#productsContainer {
     width: 100%;
 }
 

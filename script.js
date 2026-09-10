@@ -59,6 +59,16 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     }
 
+    const emptyAddProductButton =
+        document.getElementById("emptyAddProductButton");
+
+    if (emptyAddProductButton) {
+        emptyAddProductButton.addEventListener(
+            "click",
+            addProductRow
+        );
+    }
+
     /* Logout */
     const logoutButton =
         document.getElementById("logoutButton");
