@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Important for iPhone and Android -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="CWIC Chels Wellness International Order Management System"
+    >
+
+    <title>CWIC Chels Wellness International</title>
+
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Font Awesome icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN SCREEN
+     ===================================================== -->
+
+<div id="loginScreen" class="screen">
+
+    <div class="login-container">
+
+        <!-- COMPANY LOGO -->
+        <div class="company-logo">
+            <div class="logo-circle">
+                <img src="logo.png" alt="Company Logo">
+            </div>
+        </div>
+
+        <!-- COMPANY NAME -->
+        <h1>CWIC</h1>
+
+        <h2>Chels Wellness International</h2>
+
+        <p class="company-address">
+            Clastkany, Oregon, USA
+        </p>
+
+        <!-- LOGIN CARD -->
+        <div class="login-card">
+
+            <h3>
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Sign In
+            </h3>
+
+            <p class="login-description">
+                Authorized users only
+            </p>
+
+            <form id="loginForm">
+
+                <div class="form-group">
+
+                    <label for="loginEmail">
+                        Email Address
+                    </label>
+
+                    <div class="input-icon">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        <input
+                            type="email"
+                            id="loginEmail"
+                            name="email"
+                            placeholder="Enter your email"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    id="loginButton"
+                    class="btn btn-primary btn-full"
+                >
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    Sign In
+                </button>
+
+            </form>
+
+            <div
+                id="loginMessage"
+                class="message"
+                style="display:none;"
+            ></div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- =====================================================
+     MAIN APPLICATION
+     ===================================================== -->
+
+<div
+    id="appScreen"
+    class="screen"
+    style="display:none;"
+>
+
+    <!-- =================================================
+         HEADER
+         ================================================= -->
+
+    <header class="app-header">
+
+        <div class="header-inner">
+
+            <div class="brand">
+
+                <div class="brand-logo">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+
+                <div class="brand-text">
+
+                    <h1>CWIC</h1>
+
+                    <span>
+                        Chels Wellness International
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="header-user">
+
+                <div class="user-info">
+
+                    <div class="user-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+
+                    <div>
+
+                        <strong id="currentUserName">
+                            User
+                        </strong>
+
+                        <small id="currentUserEmail">
+                            user@email.com
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    id="currentUserRole"
+                    class="role-badge"
+                >
+                    User
+                </span>
+
+
+                <button
+                    type="button"
+                    id="logoutButton"
+                    class="btn btn-logout"
+                    title="Logout"
+                >
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    <span class="logout-text">
+                        Logout
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         NAVIGATION
+         ================================================= -->
+
+    <nav class="app-nav">
+
+        <div class="nav-inner">
+
+            <button
+                type="button"
+                class="nav-button active"
+                data-section="newOrderSection"
+            >
+
+                <i class="fa-solid fa-cart-plus"></i>
+
+                <span>New Order</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="nav-button"
+                data-section="ordersSection"
+            >
+
+                <i class="fa-solid fa-list"></i>
+
+                <span>Orders</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                id="adminNavButton"
+                class="nav-button admin-only"
+                data-section="adminSection"
+                style="display:none;"
+            >
+
+                <i class="fa-solid fa-chart-column"></i>
+
+                <span>Admin</span>
+
+            </button>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =================================================
+         MAIN CONTENT
+         ================================================= -->
+
+    <main class="main-container">
+
+
+        <!-- =============================================
+             NEW ORDER SECTION
+             ============================================= -->
+
+        <section
+            id="newOrderSection"
+            class="app-section active"
+        >
+
+            <div class="page-title">
+
+                <div>
+
+                    <h2>
+                        <i class="fa-solid fa-cart-plus"></i>
+                        Create New Order
+                    </h2>
+
+                    <p>
+                        Enter the order information below.
+                    </p>
+
+                </div>
+
+                <div class="order-number-display">
+
+                    <span>Order Number</span>
+
+                    <strong id="newOrderNumber">
+                        Auto Generated
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ORDER INFORMATION
+                 ========================================= -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3>
+                        <i class="fa-solid fa-calendar-days"></i>
+                        Order Information
+                    </h3>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="form-grid form-grid-2">
+
+                        <div class="form-group">
+
+                            <label for="orderDate">
+                                Date of Order
+                                <span class="required">*</span>
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-calendar"></i>
+
+                                <input
+                                    type="date"
+                                    id="orderDate"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>
+                                Entered By
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <input
+                                    type="text"
+                                    id="enteredBy"
+                                    readonly
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 SENDER INFORMATION
+                 ========================================= -->
+
+            <div class="card">
+
+                <div class="card-header sender-header">
+
+                    <h3>
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Sender Information
+                    </h3>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="form-grid form-grid-3">
+
+                        <div class="form-group">
+
+                            <label for="senderName">
+                                Sender Name
+                                <span class="required">*</span>
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <input
+                                    type="text"
+                                    id="senderName"
+                                    placeholder="Sender name"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="senderContact">
+                                Contact Number
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input
+                                    type="tel"
+                                    id="senderContact"
+                                    placeholder="Contact number"
+                                    inputmode="tel"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group form-span-full">
+
+                            <label for="senderAddress">
+                                Sender Address
+                            </label>
+
+                            <div class="input-icon textarea-icon">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea
+                                    id="senderAddress"
+                                    rows="2"
+                                    placeholder="Sender address"
+                                ></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 RECEIVER INFORMATION
+                 ========================================= -->
+
+            <div class="card">
+
+                <div class="card-header receiver-header">
+
+                    <h3>
+                        <i class="fa-solid fa-location-arrow"></i>
+                        Receiver Information
+                    </h3>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="form-grid form-grid-3">
+
+                        <div class="form-group">
+
+                            <label for="receiverName">
+                                Receiver Name
+                                <span class="required">*</span>
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <input
+                                    type="text"
+                                    id="receiverName"
+                                    placeholder="Receiver name"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="receiverContact">
+                                Contact Number
+                            </label>
+
+                            <div class="input-icon">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input
+                                    type="tel"
+                                    id="receiverContact"
+                                    placeholder="Contact number"
+                                    inputmode="tel"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group form-span-full">
+
+                            <label for="receiverAddress">
+                                Receiver Address
+                            </label>
+
+                            <div class="input-icon textarea-icon">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea
+                                    id="receiverAddress"
+                                    rows="2"
+                                    placeholder="Receiver address"
+                                ></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 PRODUCTS
+                 ========================================= -->
+
+            <div class="card">
+
+                <div class="card-header products-header">
+
+                    <div>
+
+                        <h3>
+                            <i class="fa-solid fa-box-open"></i>
+                            Products
+                        </h3>
+
+                        <p>
+                            Add one or more products to this order.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        id="addProductButton"
+                        class="btn btn-add"
+                    >
+
+                        <i class="fa-solid fa-plus"></i>
+
+                        Add Product
+
+                    </button>
+
+                </div>
+
+
+                <div class="card-body product-card-body">
+
+                    <!-- =================================
+                         DESKTOP PRODUCT HEADER
+                         ================================= -->
+
+                    <div class="product-table-header">
+
+                        <div class="product-col-number">
+                            #
+                        </div>
+
+                        <div class="product-col-name">
+                            Product
+                        </div>
+
+                        <div class="product-col-qty">
+                            Quantity
+                        </div>
+
+                        <div class="product-col-amount">
+                            Amount (Php)
+                        </div>
+
+                        <div class="product-col-total">
+                            Line Total
+                        </div>
+
+                        <div class="product-col-action">
+                            Action
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================
+                         PRODUCT ROWS
+                         ================================= -->
+
+                    <div id="productRows">
+
+                        <!-- Product rows will be created
+                             by script.js -->
+
+                    </div>
+
+
+                    <!-- =================================
+                         EMPTY PRODUCTS MESSAGE
+                         ================================= -->
+
+                    <div
+                        id="emptyProductsMessage"
+                        class="empty-products"
+                        style="display:none;"
+                    >
+
+                        <i class="fa-solid fa-box-open"></i>
+
+                        <p>
+                            No products added yet.
+                        </p>
+
+                        <button
+                            type="button"
+                            id="emptyAddProductButton"
+                            class="btn btn-add"
+                        >
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add Product
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- =================================
+                         ORDER TOTAL
+                         ================================= -->
+
+                    <div class="order-total-area">
+
+                        <div class="total-label">
+
+                            <span>
+                                Order Total
+                            </span>
+
+                        </div>
+
+                        <div class="total-value">
+
+                            <span id="orderTotal">
+                                0.00
+                            </span>
+
+                            <small>QAR</small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 FORM ACTIONS
+                 ========================================= -->
+
+            <div class="form-actions">
+
+                <button
+                    type="button"
+                    id="clearOrderButton"
+                    class="btn btn-secondary"
+                >
+
+                    <i class="fa-solid fa-rotate-left"></i>
+
+                    Clear
+
+                </button>
+
+
+                <button
+                    type="button"
+                    id="saveOrderButton"
+                    class="btn btn-primary btn-save"
+                >
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Save Order
+
+                </button>
+
+            </div>
+
+
+            <!-- =========================================
+                 ORDER MESSAGE
+                 ========================================= -->
+
+            <div
+                id="orderMessage"
+                class="message"
+                style="display:none;"
+            ></div>
+
+        </section>
+
+
+        <!-- =============================================
+             ORDERS SECTION
+             ============================================= -->
+
+        <section
+            id="ordersSection"
+            class="app-section"
+        >
+
+            <div class="page-title">
+
+                <div>
+
+                    <h2>
+                        <i class="fa-solid fa-list"></i>
+                        Orders
+                    </h2>
+
+                    <p id="ordersDescription">
+                        Your submitted orders.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="refreshOrdersButton"
+                    class="btn btn-secondary"
+                >
+
+                    <i class="fa-solid fa-rotate"></i>
+
+                    Refresh
+
+                </button>
+
+            </div>
+
+
+            <!-- =========================================
+                 SUMMARY CARDS
+                 ========================================= -->
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <div class="summary-icon">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+
+                    <div>
+
+                        <span>Total Orders</span>
+
+                        <strong id="totalOrdersCount">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="summary-card admin-only"
+                    id="grandTotalSummary"
+                    style="display:none;"
+                >
+
+                    <div class="summary-icon pink-icon">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+
+                    <div>
+
+                        <span>Grand Total</span>
+
+                        <strong>
+
+                            <span id="grandTotal">
+                                0.00
+                            </span>
+
+                            <small>QAR</small>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ORDERS TABLE
+                 ========================================= -->
+
+            <div class="card orders-card">
+
+                <div class="card-header">
+
+                    <h3>
+                        <i class="fa-solid fa-table-list"></i>
+                        Order History
+                    </h3>
+
+                </div>
+
+
+                <div class="card-body no-padding">
+
+                    <div class="table-responsive">
+
+                        <table
+                            id="ordersTable"
+                            class="orders-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Order ID</th>
+
+                                    <th>Date</th>
+
+                                    <th>Sender</th>
+
+                                    <th>Receiver</th>
+
+                                    <th>Products</th>
+
+                                    <th>Amount</th>
+
+                                    <th class="admin-only">
+                                        Created By
+                                    </th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="ordersTableBody">
+
+                                <!-- Orders inserted by
+                                     script.js -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div
+                        id="noOrdersMessage"
+                        class="no-orders"
+                        style="display:none;"
+                    >
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                        <h3>
+                            No Orders Found
+                        </h3>
+
+                        <p>
+                            There are no orders to display.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =============================================
+             ADMIN SECTION
+             ============================================= -->
+
+        <section
+            id="adminSection"
+            class="app-section"
+        >
+
+            <div class="page-title">
+
+                <div>
+
+                    <h2>
+                        <i class="fa-solid fa-chart-column"></i>
+                        Admin Dashboard
+                    </h2>
+
+                    <p>
+                        Overview of all CWIC orders.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ADMIN SUMMARY
+                 ========================================= -->
+
+            <div class="admin-summary-grid">
+
+                <div class="admin-stat-card">
+
+                    <div class="admin-stat-icon">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+
+                    <div>
+
+                        <span>Total Orders</span>
+
+                        <strong id="adminTotalOrders">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-stat-card">
+
+                    <div class="admin-stat-icon">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+
+                    <div>
+
+                        <span>Total Items</span>
+
+                        <strong id="adminTotalItems">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-stat-card grand-total-card">
+
+                    <div class="admin-stat-icon">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+
+                    <div>
+
+                        <span>Grand Total</span>
+
+                        <strong>
+
+                            <span id="adminGrandTotal">
+                                0.00
+                            </span>
+
+                            <small>QAR</small>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ADMIN INFORMATION
+                 ========================================= -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3>
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Administrator Access
+                    </h3>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="admin-notice">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <div>
+
+                            <strong>
+                                Admin View
+                            </strong>
+
+                            <p>
+                                As an administrator, you can view
+                                all authorized orders and the
+                                combined grand total.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =================================================
+         ORDER DETAILS MODAL
+         ================================================= -->
+
+    <div
+        id="orderModal"
+        class="modal"
+        style="display:none;"
+    >
+
+        <div class="modal-overlay"></div>
+
+        <div class="modal-container">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3>
+                        <i class="fa-solid fa-receipt"></i>
+                        Order Details
+                    </h3>
+
+                    <span id="modalOrderId">
+                        CWIC-0000
+                    </span>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="closeModalButton"
+                    class="modal-close"
+                    aria-label="Close"
+                >
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="orderModalBody"
+                class="modal-body"
+            >
+
+                <!-- Details inserted by script.js -->
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    id="closeModalFooterButton"
+                    class="btn btn-secondary"
+                >
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         LOADING OVERLAY
+         ================================================= -->
+
+    <div
+        id="loadingOverlay"
+        class="loading-overlay"
+        style="display:none;"
+    >
+
+        <div class="loading-box">
+
+            <div class="spinner"></div>
+
+            <p id="loadingText">
+                Please wait...
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         TOAST NOTIFICATION
+         ================================================= -->
+
+    <div
+        id="toast"
+        class="toast"
+        style="display:none;"
+    >
+
+        <div class="toast-icon">
+
+            <i
+                id="toastIcon"
+                class="fa-solid fa-circle-check"
+            ></i>
+
+        </div>
+
+        <div class="toast-content">
+
+            <strong id="toastTitle">
+                Success
+            </strong>
+
+            <p id="toastMessage">
+                Operation completed.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            id="closeToastButton"
+            class="toast-close"
+            aria-label="Close notification"
+        >
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         JAVASCRIPT
+         ================================================= -->
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+
