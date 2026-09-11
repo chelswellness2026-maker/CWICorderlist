@@ -668,6 +668,15 @@ input[readonly] {
     flex-shrink: 0;
 }
 
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+
 .brand-text {
     min-width: 0;
 }
@@ -1100,7 +1109,7 @@ input[readonly] {
 
     grid-template-columns:
         45px
-        minmax(180px, 1.7fr)
+        minmax(280px, 2fr)
         minmax(100px, 0.8fr)
         minmax(130px, 1fr)
         minmax(130px, 1fr)
@@ -1131,7 +1140,7 @@ input[readonly] {
     letter-spacing: 0.4px;
 }
 
-#productsContainer {
+#productRows {
     width: 100%;
 }
 
@@ -1140,7 +1149,7 @@ input[readonly] {
 
     grid-template-columns:
         45px
-        minmax(180px, 1.7fr)
+        minmax(280px, 2fr)
         minmax(100px, 0.8fr)
         minmax(130px, 1fr)
         minmax(130px, 1fr)
@@ -1182,26 +1191,11 @@ input[readonly] {
 .product-field input,
 .product-field select {
     width: 100%;
-
-    height: 42px;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 7px;
-
-    padding:
-        0
-        10px;
-
-    color: var(--text-dark);
-
-    background: var(--white);
-
-    outline: none;
-
-    font-size: 15px;
+    max-width: 100%;
+    height: 44px;
+    font-size: 16px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .product-field input:focus,
@@ -2876,29 +2870,39 @@ input[readonly] {
         display: none;
     }
 
-    .product-row {
-        display: grid;
+.product-row {
+    display: grid;
 
-        grid-template-columns:
-            36px
-            1fr
-            40px;
+    grid-template-columns:
+        36px
+        minmax(0, 1fr)
+        40px;
 
-        grid-template-areas:
-            "number product remove"
-            "number quantity quantity"
-            "number amount total";
+    grid-template-areas:
+        "number product remove"
+        "number quantity quantity"
+        "number amount total";
 
-        gap: 8px;
+    gap: 8px;
 
-        padding: 13px;
+    padding: 13px;
 
-        min-height: auto;
+    min-height: auto;
 
-        border-bottom:
-            1px solid
-            var(--border);
-    }
+    border-bottom:
+        1px solid
+        var(--border);
+}
+.product-field.product-name {
+    min-width: 0;
+    width: 100%;
+}
+
+.product-field.product-name select {
+    width: 100%;
+    min-width: 0;
+    display: block;
+}
 
     .product-number {
         grid-area: number;
@@ -2961,7 +2965,7 @@ input[readonly] {
     }
 
     .product-amount::before {
-        content: "Amount (QAR)";
+        content: "Amount (Php)";
     }
 
     .product-line-total::before {

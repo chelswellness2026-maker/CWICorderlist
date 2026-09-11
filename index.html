@@ -68,20 +68,43 @@
 
                 <div class="form-group">
 
-                    <label for="loginEmail">
-                        Email Address
+                    <label for="loginUsername">
+                        Username
                     </label>
 
                     <div class="input-icon">
 
-                        <i class="fa-solid fa-envelope"></i>
+                        <i class="fa-solid fa-user"></i>
 
                         <input
-                            type="email"
-                            id="loginEmail"
-                            name="email"
-                            placeholder="Enter your email"
-                            autocomplete="email"
+                            type="text"
+                            id="loginUsername"
+                            name="username"
+                            placeholder="Enter any username"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="loginPassword">
+                        Password
+                    </label>
+
+                    <div class="input-icon">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            name="password"
+                            placeholder="Enter any password"
+                            autocomplete="current-password"
                             required
                         >
 
@@ -132,7 +155,7 @@
             <div class="brand">
 
                 <div class="brand-logo">
-                    <i class="fa-solid fa-leaf"></i>
+                    <img src="logo.png" alt="CWIC Logo">
                 </div>
 
                 <div class="brand-text">
@@ -224,8 +247,9 @@
 
             <button
                 type="button"
-                class="nav-button"
+                class="nav-button admin-only"
                 data-section="ordersSection"
+                style="display:none;"
             >
 
                 <i class="fa-solid fa-list"></i>
@@ -626,7 +650,7 @@
                          PRODUCT ROWS
                          ================================= -->
 
-                    <div id="productsContainer">
+                    <div id="productRows">
 
                         <!-- Product rows will be created
                              by script.js -->
@@ -669,27 +693,101 @@
                          ORDER TOTAL
                          ================================= -->
 
-                    <div class="order-total-area">
+                  <div class="order-total-area">
 
-                        <div class="total-label">
+    <!-- Subtotal -->
+    <div class="total-row">
 
-                            <span>
-                                Order Total
-                            </span>
+        <span class="total-label">
+            Subtotal
+        </span>
 
-                        </div>
+        <div class="total-value">
+            <span id="orderSubtotal">0.00</span>
+            <small>Php</small>
+        </div>
 
-                        <div class="total-value">
+    </div>
 
-                            <span id="orderTotal">
-                                0.00
-                            </span>
 
-                            <small>QAR</small>
+    <!-- Discount - Optional -->
+    <div class="total-row optional-total-row">
 
-                        </div>
+        <label
+            for="discount"
+            class="total-label"
+        >
+            Discount
+            <small>(Optional)</small>
+        </label>
 
-                    </div>
+        <div class="total-input">
+
+            <input
+                type="number"
+                id="discount"
+                min="0"
+                step="0.01"
+                value=""
+                placeholder="0.00"
+            >
+
+            <small>Php</small>
+
+        </div>
+
+    </div>
+
+
+    <!-- Tax - Optional -->
+    <div class="total-row optional-total-row">
+
+        <label
+            for="tax"
+            class="total-label"
+        >
+            Tax
+            <small>(Optional)</small>
+        </label>
+
+        <div class="total-input">
+
+            <input
+                type="number"
+                id="tax"
+                min="0"
+                step="0.01"
+                value=""
+                placeholder="0.00"
+            >
+
+            <small>Php</small>
+
+        </div>
+
+    </div>
+
+
+    <!-- Final Total -->
+    <div class="total-row final-total-row">
+
+        <span class="total-label">
+            Order Total
+        </span>
+
+        <div class="total-value">
+
+            <span id="orderTotal">
+                0.00
+            </span>
+
+            <small>Php</small>
+
+        </div>
+
+    </div>
+
+</div>
 
                 </div>
 
@@ -828,7 +926,7 @@
                                 0.00
                             </span>
 
-                            <small>QAR</small>
+                            <small>Php</small>
 
                         </strong>
 
@@ -1015,7 +1113,7 @@
                                 0.00
                             </span>
 
-                            <small>QAR</small>
+                            <small>Php</small>
 
                         </strong>
 

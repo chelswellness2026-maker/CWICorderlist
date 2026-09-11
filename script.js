@@ -59,16 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     }
 
-    const emptyAddProductButton =
-        document.getElementById("emptyAddProductButton");
-
-    if (emptyAddProductButton) {
-        emptyAddProductButton.addEventListener(
-            "click",
-            addProductRow
-        );
-    }
-
     /* Logout */
     const logoutButton =
         document.getElementById("logoutButton");
@@ -89,112 +79,42 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+
 /* =========================================================
    INITIALIZE APPLICATION
    ========================================================= */
 
 function initializeApplication() {
 
-    const savedUser =
-        localStorage.getItem("cwicCurrentUser");
+    /*
+     * IMPORTANT SECURITY RULE
+     *
+     * Do NOT automatically restore a user from
+     * localStorage.
+     *
+     * Every time index.html is opened, the user
+     * must pass through the login screen.
+     */
 
-    if (!savedUser) {
-        showLoginScreen();
-        return;
-    }
+    currentUser = null;
 
-    try {
+    /*
+     * Remove any old login information created
+     * by the previous version of the system.
+     */
 
-        const user = JSON.parse(savedUser);
+    localStorage.removeItem(
+        "cwicCurrentUser"
+    );
 
-        if (!user || !user.email) {
-            localStorage.removeItem("cwicCurrentUser");
-            showLoginScreen();
-            return;
-        }
+    /*
+     * Always start at Login.
+     */
 
-        const email =
-            String(user.email)
-                .trim()
-                .toLowerCase();
+    showLoginScreen();
 
-        showLoading("Checking authorization...");
-
-        apiRequest("login", {
-            email: email
-        })
-        .then(function (result) {
-
-            if (!result || !result.success) {
-
-                localStorage.removeItem(
-                    "cwicCurrentUser"
-                );
-
-                currentUser = null;
-
-                showLoginScreen();
-
-                return;
-            }
-
-            currentUser = {
-                ...(result.user || {}),
-                email: String(
-                    result.user?.email || email
-                )
-                    .trim()
-                    .toLowerCase()
-            };
-
-            localStorage.setItem(
-                "cwicCurrentUser",
-                JSON.stringify(currentUser)
-            );
-
-            showApplication();
-
-            loadOrders();
-
-        })
-        .catch(function (error) {
-
-            console.error(
-                "Initialization error:",
-                error
-            );
-
-            localStorage.removeItem(
-                "cwicCurrentUser"
-            );
-
-            currentUser = null;
-
-            showLoginScreen();
-
-        })
-        .finally(function () {
-
-            hideLoading();
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Invalid saved user:",
-            error
-        );
-
-        localStorage.removeItem(
-            "cwicCurrentUser"
-        );
-
-        currentUser = null;
-
-        showLoginScreen();
-    }
 }
+
 
 
 /* =========================================================
@@ -205,36 +125,58 @@ function handleLogin(event) {
 
     event.preventDefault();
 
-    const emailInput =
-        document.getElementById("loginEmail");
+    const usernameInput =
+        document.getElementById("loginUsername");
+
+    const passwordInput =
+        document.getElementById("loginPassword");
 
     const loginButton =
         document.getElementById("loginButton");
 
-    const email =
-        String(emailInput?.value || "")
-            .trim()
-            .toLowerCase();
+    const username =
+        String(
+            usernameInput?.value || ""
+        ).trim();
 
-    if (!email) {
+    const password =
+        String(
+            passwordInput?.value || ""
+        );
+
+    /*
+     * Validate username
+     */
+
+    if (!username) {
 
         showLoginMessage(
-            "Please enter your email address.",
+            "Please enter your email or username.",
             "error"
         );
 
         return;
     }
 
-    if (!email.includes("@")) {
+
+    /*
+     * Validate password
+     */
+
+    if (!password) {
 
         showLoginMessage(
-            "Please enter a valid email address.",
+            "Please enter your password.",
             "error"
         );
 
         return;
     }
+
+
+    /*
+     * Disable login button
+     */
 
     if (loginButton) {
 
@@ -242,60 +184,197 @@ function handleLogin(event) {
 
         loginButton.innerHTML =
             '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
+
     }
 
-    showLoading(
-        "Checking authorization..."
-    );
 
-    apiRequest("login", {
-        email: email
-    })
+    hideLoginMessage();
+
+
+    /*
+     * IMPORTANT:
+     *
+     * The login is now checked by
+     * Google Apps Script.
+     *
+     * The password is NOT checked
+     * locally by JavaScript.
+     */
+
+    apiRequest(
+        "login",
+        {
+
+            email:
+                username,
+
+            userEmail:
+                username,
+
+            password:
+                password
+
+        }
+    )
 
     .then(function (result) {
 
-        if (!result || !result.success) {
+        console.log(
+            "Login response:",
+            result
+        );
 
-            showLoginMessage(
-                result && result.message
-                    ? result.message
-                    : "Login failed.",
-                "error"
-            );
-
-            return;
-        }
 
         /*
-         * IMPORTANT:
-         * Always preserve the email that was entered
-         * during login.
+         * Login failed
          */
-        currentUser = {
-            ...(result.user || {}),
-            email: String(
-                result.user?.email || email
+
+        if (
+            !result ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result &&
+                result.message
+                    ? result.message
+                    : "Invalid username or password."
+            );
+
+        }
+
+
+        /*
+         * Make sure the backend
+         * returned a user object.
+         */
+
+        if (
+            !result.user
+        ) {
+
+            throw new Error(
+                "Login response did not contain user information."
+            );
+
+        }
+
+
+        const user =
+            result.user;
+
+
+        /*
+         * Get role from backend.
+         *
+         * IMPORTANT:
+         * We do NOT decide the role
+         * based on the username.
+         */
+
+        const backendRole =
+            String(
+                user.role ||
+                "User"
             )
                 .trim()
-                .toLowerCase()
+                .toLowerCase();
+
+
+        /*
+         * Create current user
+         */
+
+        currentUser = {
+
+            username:
+                String(
+                    user.email ||
+                    username
+                ).trim(),
+
+            email:
+                String(
+                    user.email ||
+                    username
+                )
+                    .trim()
+                    .toLowerCase(),
+
+            name:
+                String(
+                    user.name ||
+                    user.email ||
+                    username
+                ).trim(),
+
+            role:
+                backendRole === "admin"
+                    ? "admin"
+                    : "user"
+
         };
+
+
+        /*
+         * Save authenticated user
+         */
 
         localStorage.setItem(
             "cwicCurrentUser",
-            JSON.stringify(currentUser)
+            JSON.stringify(
+                currentUser
+            )
         );
+
+
+        /*
+         * Clear login message
+         */
 
         hideLoginMessage();
 
+
+        /*
+         * Show application
+         */
+
         showApplication();
 
-        loadOrders();
+
+        /*
+         * Only Admin loads Orders
+         */
+
+        if (
+            isCurrentUserAdmin()
+        ) {
+
+            loadOrders();
+
+        }
+
+
+        /*
+         * Success message
+         */
 
         showToast(
             "Welcome",
             "You are successfully signed in.",
             "success"
         );
+
+
+        /*
+         * Clear password field
+         */
+
+        if (passwordInput) {
+
+            passwordInput.value = "";
+
+        }
 
     })
 
@@ -306,67 +385,61 @@ function handleLogin(event) {
             error
         );
 
+
+        /*
+         * IMPORTANT:
+         *
+         * Wrong password will come here.
+         */
+
         showLoginMessage(
             error.message ||
-            "Unable to sign in.",
+            "Invalid username or password.",
             "error"
+        );
+
+
+        showToast(
+            "Login Failed",
+            error.message ||
+            "Invalid username or password.",
+            "error"
+        );
+
+
+        /*
+         * Make sure no fake
+         * user remains logged in.
+         */
+
+        currentUser = null;
+
+        localStorage.removeItem(
+            "cwicCurrentUser"
         );
 
     })
 
     .finally(function () {
 
-        hideLoading();
+        /*
+         * Enable button again
+         */
 
         if (loginButton) {
 
-            loginButton.disabled = false;
+            loginButton.disabled =
+                false;
 
             loginButton.innerHTML =
                 '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
+
         }
 
     });
+
 }
 
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-function logout() {
-
-    const confirmed =
-        confirm(
-            "Are you sure you want to sign out?"
-        );
-
-    if (!confirmed) {
-        return;
-    }
-
-    currentUser = null;
-    orders = [];
-
-    localStorage.removeItem(
-        "cwicCurrentUser"
-    );
-
-    const loginEmail =
-        document.getElementById("loginEmail");
-
-    if (loginEmail) {
-        loginEmail.value = "";
-    }
-
-    showLoginScreen();
-
-    showToast(
-        "Signed Out",
-        "You have been signed out.",
-        "success"
-    );
-}
 
 
 /* =========================================================
@@ -438,6 +511,7 @@ function updateUserInterface() {
 
     const email =
         currentUser.email ||
+        currentUser.username ||
         "";
 
     const role =
@@ -485,7 +559,9 @@ function updateUserInterface() {
     }
 
     if (enteredBy) {
-        enteredBy.value = email;
+        enteredBy.value =
+            currentUser.username ||
+            email;
     }
 
     /* Admin-only sections */
@@ -570,6 +646,16 @@ function setupNavigation() {
 
 function switchSection(sectionId) {
 
+    if (
+        (
+            sectionId === "ordersSection" ||
+            sectionId === "adminSection"
+        ) &&
+        !isCurrentUserAdmin()
+    ) {
+        sectionId = "newOrderSection";
+    }
+
     document
         .querySelectorAll(".app-section")
         .forEach(function (section) {
@@ -652,7 +738,7 @@ function setupProductEvents() {
 
     const productContainer =
         document.getElementById(
-            "productsContainer"
+            "productRows"
         );
 
     if (!productContainer) {
@@ -729,18 +815,47 @@ function setupProductEvents() {
 
         }
     );
+        /* Optional Discount */
+    const discountInput =
+        document.getElementById(
+            "discount"
+        );
+
+    if (discountInput) {
+
+        discountInput.addEventListener(
+            "input",
+            updateOrderTotal
+        );
+
+    }
+
+
+    /* Optional Tax */
+    const taxInput =
+        document.getElementById(
+            "tax"
+        );
+
+    if (taxInput) {
+
+        taxInput.addEventListener(
+            "input",
+            updateOrderTotal
+        );
+
+    }
 }
 
 
 /* =========================================================
    ADD PRODUCT ROW
    ========================================================= */
-
 function addProductRow() {
 
     const container =
         document.getElementById(
-            "productsContainer"
+            "productRows"
         );
 
     if (!container) {
@@ -759,10 +874,18 @@ function addProductRow() {
         productRowCounter;
 
     row.innerHTML = `
-        <div class="product-field">
+        <!-- Row Number -->
+        <div class="product-number">
+            ${productRowCounter}
+        </div>
+
+        <!-- Product -->
+        <div class="product-field product-name">
             <label>Product</label>
+
             <select class="product-select">
                 <option value="">Select Product</option>
+
                 ${PRODUCTS.map(function(product) {
                     return `
                         <option value="${escapeHtml(product)}">
@@ -770,11 +893,14 @@ function addProductRow() {
                         </option>
                     `;
                 }).join("")}
+
             </select>
         </div>
 
-        <div class="product-field">
+        <!-- Quantity -->
+        <div class="product-field product-quantity">
             <label>Quantity</label>
+
             <input
                 type="number"
                 class="quantity-input"
@@ -784,8 +910,10 @@ function addProductRow() {
             >
         </div>
 
-        <div class="product-field">
+        <!-- Amount -->
+        <div class="product-field product-amount">
             <label>Amount</label>
+
             <input
                 type="number"
                 class="amount-input"
@@ -795,14 +923,18 @@ function addProductRow() {
             >
         </div>
 
-        <div class="product-field">
+        <!-- Line Total -->
+        <div class="product-field product-line-total">
             <label>Total</label>
-            <div class="product-row-total">
-                0.00 QAR
+
+            <div class="product-row-total line-total">
+                0.00 
             </div>
         </div>
 
+        <!-- Action -->
         <div class="product-field product-action">
+
             <button
                 type="button"
                 class="remove-product btn-danger"
@@ -810,6 +942,7 @@ function addProductRow() {
             >
                 <i class="fa-solid fa-trash"></i>
             </button>
+
         </div>
     `;
 
@@ -820,7 +953,6 @@ function addProductRow() {
     updateOrderTotal();
 
 }
-
 
 /* =========================================================
    UPDATE PRODUCT ROW TOTAL
@@ -864,7 +996,7 @@ function updateProductRowTotal(row) {
 
         totalElement.textContent =
             formatMoney(total) +
-            " QAR";
+            "Php";
 
     }
 
@@ -874,7 +1006,6 @@ function updateProductRowTotal(row) {
 /* =========================================================
    UPDATE ORDER TOTAL
    ========================================================= */
-
 function updateOrderTotal() {
 
     const rows =
@@ -882,7 +1013,7 @@ function updateOrderTotal() {
             ".product-row"
         );
 
-    let total = 0;
+    let subtotal = 0;
 
     rows.forEach(function (row) {
 
@@ -900,28 +1031,102 @@ function updateOrderTotal() {
                 )?.value || 0
             );
 
-        total +=
+        subtotal +=
             quantity * amount;
 
     });
 
-    const totalElements =
-        document.querySelectorAll(
-            ".order-total, #orderTotal, #grandTotal"
+
+    /* =========================================
+       OPTIONAL DISCOUNT
+       ========================================= */
+
+    const discountInput =
+        document.getElementById(
+            "discount"
         );
 
-    totalElements.forEach(
-        function (element) {
+    let discount =
+        Number(
+            discountInput?.value || 0
+        );
 
-            element.textContent =
-                formatMoney(total) +
-                " QAR";
+    if (
+        !Number.isFinite(discount) ||
+        discount < 0
+    ) {
+        discount = 0;
+    }
 
-        }
-    );
+
+    /* =========================================
+       OPTIONAL TAX
+       ========================================= */
+
+    const taxInput =
+        document.getElementById(
+            "tax"
+        );
+
+    let tax =
+        Number(
+            taxInput?.value || 0
+        );
+
+    if (
+        !Number.isFinite(tax) ||
+        tax < 0
+    ) {
+        tax = 0;
+    }
+
+
+    /* =========================================
+       FINAL TOTAL
+       ========================================= */
+
+    const total =
+        subtotal -
+        discount +
+        tax;
+
+
+    /* =========================================
+       UPDATE SUBTOTAL
+       ========================================= */
+
+    const subtotalElement =
+        document.getElementById(
+            "orderSubtotal"
+        );
+
+    if (subtotalElement) {
+
+        subtotalElement.textContent =
+            formatMoney(subtotal);
+
+    }
+
+
+    /* =========================================
+       UPDATE ORDER TOTAL
+       ========================================= */
+
+    const totalElement =
+        document.getElementById(
+            "orderTotal"
+        );
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            formatMoney(
+                Math.max(total, 0)
+            );
+
+    }
 
 }
-
 
 /* =========================================================
    COLLECT PRODUCTS
@@ -1064,47 +1269,23 @@ function validateOrder(data) {
 
 function saveOrder() {
 
-    /*
-     * IMPORTANT:
-     * The user email must exist before creating an order.
-     */
-    if (
-        !currentUser ||
-        !currentUser.email
-    ) {
+    if (!currentUser || !currentUser.username) {
 
         showToast(
             "Login Required",
-            "Your login session is missing. Please sign in again.",
+            "Please sign in again before creating an order.",
             "error"
         );
 
-        localStorage.removeItem(
-            "cwicCurrentUser"
-        );
-
-        currentUser = null;
-
         showLoginScreen();
-
         return;
     }
 
-    const userEmail =
-        String(
-            currentUser.email || ""
-        )
-            .trim()
-            .toLowerCase();
+    const username =
+        String(currentUser.username || "").trim();
 
-    if (!userEmail) {
-
-        showToast(
-            "User Email Required",
-            "Your account email could not be detected. Please sign in again.",
-            "error"
-        );
-
+    if (!username) {
+        showLoginScreen();
         return;
     }
 
@@ -1114,9 +1295,14 @@ function saveOrder() {
          * Send both names to support
          * the Apps Script backend.
          */
-        email: userEmail,
+        username: username,
 
-        userEmail: userEmail,
+        email: username,
+
+        userEmail: username,
+
+        role:
+            currentUser.role || "user",
 
         orderDate:
             document.getElementById(
@@ -1148,14 +1334,27 @@ function saveOrder() {
                 "receiverAddress"
             )?.value.trim() || "",
 
-        receiverContact:
+                receiverContact:
             document.getElementById(
                 "receiverContact"
             )?.value.trim() || "",
 
+        discount:
+            Number(
+                document.getElementById(
+                    "discount"
+                )?.value || 0
+            ),
+
+        tax:
+            Number(
+                document.getElementById(
+                    "tax"
+                )?.value || 0
+            ),
+
         items:
             collectProducts()
-
     };
 
 
@@ -1176,8 +1375,7 @@ function saveOrder() {
 
 
     /* Calculate total */
-
-    const total =
+    const subtotal =
         data.items.reduce(
             function (sum, item) {
 
@@ -1194,6 +1392,23 @@ function saveOrder() {
         );
 
 
+    const discount =
+        Number(
+            data.discount || 0
+        );
+
+
+    const tax =
+        Number(
+            data.tax || 0
+        );
+
+
+    const total =
+        subtotal -
+        discount +
+        tax;
+
     /* Confirmation */
 
     const confirmed =
@@ -1201,7 +1416,7 @@ function saveOrder() {
             "Save this order?\n\n" +
             "Order Total: " +
             formatMoney(total) +
-            " QAR"
+            " Php"
         );
 
     if (!confirmed) {
@@ -1251,11 +1466,22 @@ function saveOrder() {
             data:
                 JSON.stringify(data),
 
+            username:
+                username,
+
             email:
-                userEmail,
+                username,
 
             userEmail:
-                userEmail
+                username,
+
+            role:
+                currentUser.role || "user",
+
+            isAdmin:
+                isCurrentUserAdmin()
+                    ? "true"
+                    : "false"
 
         }
     )
@@ -1368,88 +1594,70 @@ function saveOrder() {
 
 function loadOrders() {
 
-    if (
-        !currentUser ||
-        !currentUser.email
-    ) {
+    if (!currentUser || !currentUser.username) {
         return;
     }
 
-    const email =
-        String(
-            currentUser.email
-        )
-            .trim()
-            .toLowerCase();
+    /*
+     * Only the administrator can view orders.
+     * Regular users can create orders only.
+     */
+    if (!isCurrentUserAdmin()) {
+        return;
+    }
 
-    showLoading(
-        "Loading orders..."
-    );
+    const username =
+        String(currentUser.username).trim();
+
+    showLoading("Loading all orders...");
 
     apiRequest(
         "getOrders",
         {
-            email: email,
-            userEmail: email
+            username: username,
+            email: username,
+            userEmail: username,
+            role: "admin",
+            isAdmin: "true"
         }
     )
 
     .then(function (result) {
 
-        if (
-            !result ||
-            !result.success
-        ) {
-
+        if (!result || !result.success) {
             throw new Error(
-                result &&
-                result.message
+                result && result.message
                     ? result.message
                     : "Unable to load orders."
             );
-
         }
 
         orders =
-            Array.isArray(
-                result.orders
-            )
+            Array.isArray(result.orders)
                 ? result.orders
                 : [];
 
-        renderOrders(
-            orders
-        );
-
-        updateOrderSummary(
-            orders
-        );
+        renderOrders(orders);
+        updateOrderSummary(orders);
 
     })
 
     .catch(function (error) {
 
-        console.error(
-            "Load orders error:",
-            error
-        );
+        console.error("Load orders error:", error);
 
         showToast(
             "Orders Error",
-            error.message ||
-            "Unable to load orders.",
+            error.message || "Unable to load orders.",
             "error"
         );
 
     })
 
     .finally(function () {
-
         hideLoading();
-
     });
 }
-
 
 /* =========================================================
    RENDER ORDERS
@@ -1467,9 +1675,19 @@ function renderOrders(orderList) {
             "ordersTableBody"
         );
 
+
+    /* =====================================================
+       TABLE VIEW
+       ===================================================== */
+
     if (tableBody) {
 
         tableBody.innerHTML = "";
+
+
+        /*
+         * No orders
+         */
 
         if (
             !orderList ||
@@ -1478,7 +1696,7 @@ function renderOrders(orderList) {
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="empty-state">
+                    <td colspan="8" class="empty-state">
                         <i class="fa-solid fa-inbox"></i>
                         <p>No orders found.</p>
                     </td>
@@ -1488,6 +1706,11 @@ function renderOrders(orderList) {
             return;
         }
 
+
+        /*
+         * Display orders
+         */
+
         orderList.forEach(
             function (order) {
 
@@ -1496,15 +1719,24 @@ function renderOrders(orderList) {
                         "tr"
                     );
 
+
+                const orderId =
+                    order.orderId ||
+                    order.id ||
+                    "";
+
+
                 row.innerHTML = `
+
+                    <!-- Order ID -->
                     <td>
                         ${escapeHtml(
-                            order.orderId ||
-                            order.id ||
-                            "-"
+                            orderId || "-"
                         )}
                     </td>
 
+
+                    <!-- Date -->
                     <td>
                         ${escapeHtml(
                             formatDate(
@@ -1513,6 +1745,8 @@ function renderOrders(orderList) {
                         )}
                     </td>
 
+
+                    <!-- Sender -->
                     <td>
                         ${escapeHtml(
                             order.senderName ||
@@ -1520,6 +1754,8 @@ function renderOrders(orderList) {
                         )}
                     </td>
 
+
+                    <!-- Receiver -->
                     <td>
                         ${escapeHtml(
                             order.receiverName ||
@@ -1527,57 +1763,58 @@ function renderOrders(orderList) {
                         )}
                     </td>
 
-                    <td>
-                        ${escapeHtml(
-                            order.receiverContact ||
-                            "-"
-                        )}
-                    </td>
 
+                    <!-- Products -->
                     <td>
                         ${escapeHtml(
                             getItemsText(order)
                         )}
                     </td>
 
+
+                    <!-- Amount -->
                     <td>
                         ${formatMoney(
                             getOrderTotal(order)
                         )}
-                        QAR
+                        Php
                     </td>
 
-                    <td>
+
+                    <!-- Created By -->
+                    <td class="admin-only">
                         ${escapeHtml(
+                             order.createdBy ||
                             order.enteredBy ||
+                           
                             order.email ||
                             order.userEmail ||
                             "-"
                         )}
                     </td>
 
-                    <td>
-                        ${escapeHtml(
-                            order.status ||
-                            "Pending"
-                        )}
-                    </td>
 
+                    <!-- Action -->
                     <td>
+
                         <button
                             type="button"
                             class="btn btn-small"
                             onclick="viewOrder('${escapeHtml(
-                                order.orderId ||
-                                order.id ||
-                                ""
+                                orderId
                             )}')"
                         >
+
                             <i class="fa-solid fa-eye"></i>
+
                             View
+
                         </button>
+
                     </td>
+
                 `;
+
 
                 tableBody.appendChild(
                     row
@@ -1586,15 +1823,44 @@ function renderOrders(orderList) {
             }
         );
 
+
+        /*
+         * Make sure Admin-only cells
+         * follow the current user role.
+         */
+
+        const isAdmin =
+            isCurrentUserAdmin();
+
+
+        tableBody
+            .querySelectorAll(
+                ".admin-only"
+            )
+            .forEach(
+                function (element) {
+
+                    element.style.display =
+                        isAdmin
+                            ? ""
+                            : "none";
+
+                }
+            );
+
+
         return;
     }
 
 
-    /* Card-style fallback */
+    /* =====================================================
+       CARD VIEW FALLBACK
+       ===================================================== */
 
     if (container) {
 
         container.innerHTML = "";
+
 
         if (
             !orderList ||
@@ -1603,13 +1869,19 @@ function renderOrders(orderList) {
 
             container.innerHTML = `
                 <div class="empty-state">
+
                     <i class="fa-solid fa-inbox"></i>
-                    <p>No orders found.</p>
+
+                    <p>
+                        No orders found.
+                    </p>
+
                 </div>
             `;
 
             return;
         }
+
 
         orderList.forEach(
             function (order) {
@@ -1619,11 +1891,15 @@ function renderOrders(orderList) {
                         "div"
                     );
 
+
                 card.className =
                     "order-card";
 
+
                 card.innerHTML = `
+
                     <div class="order-card-header">
+
                         <strong>
                             ${escapeHtml(
                                 order.orderId ||
@@ -1639,43 +1915,70 @@ function renderOrders(orderList) {
                                 )
                             )}
                         </span>
+
                     </div>
+
 
                     <div class="order-card-body">
 
                         <p>
-                            <strong>Sender:</strong>
+
+                            <strong>
+                                Sender:
+                            </strong>
+
                             ${escapeHtml(
                                 order.senderName ||
                                 "-"
                             )}
+
                         </p>
 
+
                         <p>
-                            <strong>Receiver:</strong>
+
+                            <strong>
+                                Receiver:
+                            </strong>
+
                             ${escapeHtml(
                                 order.receiverName ||
                                 "-"
                             )}
+
                         </p>
 
+
                         <p>
-                            <strong>Contact:</strong>
+
+                            <strong>
+                                Contact:
+                            </strong>
+
                             ${escapeHtml(
                                 order.receiverContact ||
                                 "-"
                             )}
+
                         </p>
 
+
                         <p>
-                            <strong>Total:</strong>
+
+                            <strong>
+                                Total:
+                            </strong>
+
                             ${formatMoney(
                                 getOrderTotal(order)
                             )}
-                            QAR
+
+                            Php
+
                         </p>
 
                     </div>
+
 
                     <div class="order-card-footer">
 
@@ -1688,12 +1991,17 @@ function renderOrders(orderList) {
                                 ""
                             )}')"
                         >
+
                             <i class="fa-solid fa-eye"></i>
+
                             View Order
+
                         </button>
 
                     </div>
+
                 `;
+
 
                 container.appendChild(
                     card
@@ -1701,9 +2009,10 @@ function renderOrders(orderList) {
 
             }
         );
-    }
-}
 
+    }
+
+}
 
 /* =========================================================
    GET ORDER ITEMS TEXT
@@ -1753,82 +2062,201 @@ function getItemsText(order) {
         .join(", ");
 }
 
-
 /* =========================================================
    GET ORDER TOTAL
    ========================================================= */
 
 function getOrderTotal(order) {
 
-    if (
-        order.total !== undefined &&
-        order.total !== null &&
-        order.total !== ""
+    if (!order) {
+        return 0;
+    }
+
+
+    /*
+     * IMPORTANT:
+     *
+     * Google Apps Script returns:
+     *
+     * totalAmount
+     *
+     * Older frontend versions may use:
+     *
+     * total
+     * orderTotal
+     */
+
+    const totalCandidates = [
+
+        order.totalAmount,
+
+        order.total,
+
+        order.orderTotal
+
+    ];
+
+
+    for (
+        let i = 0;
+        i < totalCandidates.length;
+        i++
     ) {
 
-        const total =
-            Number(order.total);
+        const value =
+            totalCandidates[i];
+
 
         if (
-            Number.isFinite(total)
+            value !== undefined &&
+            value !== null &&
+            value !== ""
         ) {
-            return total;
+
+            const number =
+                Number(value);
+
+
+            if (
+                Number.isFinite(number)
+            ) {
+
+                return number;
+
+            }
+
         }
+
     }
+
+
+    /*
+     * Fallback:
+     *
+     * Calculate total from products
+     * if no saved total exists.
+     */
 
     let items =
         order.items ||
         order.products ||
         [];
 
+
     if (
         typeof items === "string"
     ) {
 
         try {
+
             items =
                 JSON.parse(items);
+
         } catch (error) {
+
             items = [];
+
         }
 
     }
 
+
     if (
         !Array.isArray(items)
     ) {
+
         return 0;
+
     }
 
-    return items.reduce(
-        function (sum, item) {
 
-            return (
-                sum +
-                (
-                    Number(
-                        item.quantity || 0
-                    ) *
-                    Number(
-                        item.amount || 0
+    /*
+     * Calculate product subtotal.
+     */
+
+    const subtotal =
+        items.reduce(
+            function (sum, item) {
+
+                return (
+                    sum +
+                    (
+                        Number(
+                            item.quantity || 0
+                        ) *
+                        Number(
+                            item.amount || 0
+                        )
                     )
-                )
-            );
+                );
 
-        },
+            },
+            0
+        );
+
+
+    /*
+     * Optional discount.
+     */
+
+    const discount =
+        Number(
+            order.discount || 0
+        );
+
+
+    /*
+     * Optional tax.
+     */
+
+    const tax =
+        Number(
+            order.tax || 0
+        );
+
+
+    /*
+     * Final total:
+     *
+     * Subtotal - Discount + Tax
+     */
+
+    return Math.max(
+        subtotal -
+        discount +
+        tax,
         0
     );
+
 }
-
-
 /* =========================================================
    UPDATE ORDER SUMMARY
    ========================================================= */
 
 function updateOrderSummary(orderList) {
 
+    /*
+     * Make sure orderList is always an array.
+     */
+
+    if (!Array.isArray(orderList)) {
+
+        orderList = [];
+
+    }
+
+
+    /* =====================================================
+       TOTAL ORDERS
+       ===================================================== */
+
     const totalOrders =
         orderList.length;
+
+
+    /* =====================================================
+       GRAND TOTAL
+       ===================================================== */
 
     const totalValue =
         orderList.reduce(
@@ -1844,10 +2272,101 @@ function updateOrderSummary(orderList) {
         );
 
 
+    /* =====================================================
+       TOTAL ITEMS
+       ===================================================== */
+
+    let totalItems = 0;
+
+
+    orderList.forEach(
+        function (order) {
+
+            let items =
+                order.items ||
+                order.products ||
+                [];
+
+
+            /*
+             * Sometimes items may arrive
+             * as a JSON string.
+             */
+
+            if (
+                typeof items === "string"
+            ) {
+
+                try {
+
+                    items =
+                        JSON.parse(items);
+
+                } catch (error) {
+
+                    items = [];
+
+                }
+
+            }
+
+
+            if (
+                !Array.isArray(items)
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+             * Count the actual quantities.
+             *
+             * Example:
+             *
+             * Coffee x 3
+             * Soap x 10
+             *
+             * Total Items = 13
+             */
+
+            items.forEach(
+                function (item) {
+
+                    const quantity =
+                        Number(
+                            item.quantity || 0
+                        );
+
+
+                    if (
+                        Number.isFinite(
+                            quantity
+                        )
+                    ) {
+
+                        totalItems +=
+                            quantity;
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       ORDERS PAGE - TOTAL ORDERS
+       ===================================================== */
+
     const totalOrdersElements =
         document.querySelectorAll(
-            "#totalOrders, .total-orders"
+            "#totalOrdersCount, #totalOrders, .total-orders"
         );
+
 
     totalOrdersElements.forEach(
         function (element) {
@@ -1859,10 +2378,15 @@ function updateOrderSummary(orderList) {
     );
 
 
+    /* =====================================================
+       ORDERS PAGE - GRAND TOTAL
+       ===================================================== */
+
     const totalValueElements =
         document.querySelectorAll(
             "#grandTotal, #grandTotalValue, .grand-total"
         );
+
 
     totalValueElements.forEach(
         function (element) {
@@ -1870,44 +2394,68 @@ function updateOrderSummary(orderList) {
             element.textContent =
                 formatMoney(
                     totalValue
-                ) +
-                " QAR";
+                );
 
         }
     );
 
 
-    /* Admin statistics */
+    /* =====================================================
+       ADMIN - TOTAL ORDERS
+       ===================================================== */
 
     const adminTotalOrders =
         document.getElementById(
             "adminTotalOrders"
         );
 
+
     if (adminTotalOrders) {
+
         adminTotalOrders.textContent =
             totalOrders;
+
     }
 
 
-    const adminTotalValue =
+    /* =====================================================
+       ADMIN - TOTAL ITEMS
+       ===================================================== */
+
+    const adminTotalItems =
         document.getElementById(
-            "adminTotalValue"
+            "adminTotalItems"
         );
 
-    if (adminTotalValue) {
 
-        adminTotalValue.textContent =
+    if (adminTotalItems) {
+
+        adminTotalItems.textContent =
+            totalItems;
+
+    }
+
+
+    /* =====================================================
+       ADMIN - GRAND TOTAL
+       ===================================================== */
+
+    const adminGrandTotal =
+        document.getElementById(
+            "adminGrandTotal"
+        );
+
+
+    if (adminGrandTotal) {
+
+        adminGrandTotal.textContent =
             formatMoney(
                 totalValue
-            ) +
-            " QAR";
+            );
 
     }
 
 }
-
-
 /* =========================================================
    VIEW ORDER
    ========================================================= */
@@ -2141,7 +2689,7 @@ function buildOrderDetailsHtml(order) {
                                                 )
                                             )
                                         }
-                                        QAR
+                                        Php
                                     </span>
                                 </div>
                             `;
@@ -2165,7 +2713,7 @@ function buildOrderDetailsHtml(order) {
                     ${formatMoney(
                         getOrderTotal(order)
                     )}
-                    QAR
+                    Php
                 </span>
 
             </div>
@@ -2264,7 +2812,7 @@ function buildOrderDetailsText(order) {
         formatMoney(
             getOrderTotal(order)
         ) +
-        " QAR"
+        " Php"
     );
 }
 
@@ -2336,7 +2884,7 @@ function clearOrderForm() {
 
     const container =
         document.getElementById(
-            "productsContainer"
+            "productRows"
         );
 
     if (container) {
@@ -3016,7 +3564,67 @@ function closeMobileMenu() {
 
     }
 }
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
+function logout() {
+
+    console.log("Logout button clicked.");
+
+    // Clear current user
+    currentUser = null;
+
+    // Remove saved login information
+    localStorage.removeItem(
+        "cwicCurrentUser"
+    );
+
+    // Clear loaded orders
+    orders = [];
+
+    // Close any open modal
+    if (typeof closeModal === "function") {
+        closeModal();
+    }
+
+    // Return to Login screen
+    showLoginScreen();
+
+    // Clear login fields
+    const usernameInput =
+        document.getElementById(
+            "loginUsername"
+        );
+
+    const passwordInput =
+        document.getElementById(
+            "loginPassword"
+        );
+
+    if (usernameInput) {
+        usernameInput.value = "";
+    }
+
+    if (passwordInput) {
+        passwordInput.value = "";
+    }
+
+    // Clear login error/message
+    if (typeof hideLoginMessage === "function") {
+        hideLoginMessage();
+    }
+
+    // Show confirmation
+    if (typeof showToast === "function") {
+        showToast(
+            "Logged Out",
+            "You have been successfully logged out.",
+            "success"
+        );
+    }
+
+}
 
 /* =========================================================
    GLOBAL FUNCTIONS
